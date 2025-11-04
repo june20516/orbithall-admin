@@ -45,6 +45,31 @@ export default async function Home() {
             </p>
           </div>
 
+          {session.backendToken && (
+            <div className="w-full rounded-lg bg-green-50 p-6 dark:bg-green-900/20">
+              <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                ✓ 백엔드 인증 완료
+              </p>
+              <p className="mt-2 text-xs text-green-600 dark:text-green-500">
+                백엔드 사용자 ID: {session.backendUser?.id}
+              </p>
+              <p className="mt-1 text-xs text-green-600 dark:text-green-500 break-all">
+                JWT: {session.backendToken.substring(0, 10)}...
+              </p>
+            </div>
+          )}
+
+          {!session.backendToken && (
+            <div className="w-full rounded-lg bg-yellow-50 p-6 dark:bg-yellow-900/20">
+              <p className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
+                ⚠ 백엔드 인증 실패
+              </p>
+              <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-500">
+                백엔드 서버와 연동되지 않았습니다.
+              </p>
+            </div>
+          )}
+
           <div className="max-w-md">
             <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
               관리자 페이지에 오신 것을 환영합니다
