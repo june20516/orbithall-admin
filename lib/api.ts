@@ -14,7 +14,7 @@ export async function fetchBackend(
     throw new Error("백엔드 인증이 필요합니다");
   }
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`;
+  const url = `${process.env.API_URL}${endpoint}`;
 
   const response = await fetch(url, {
     ...options,

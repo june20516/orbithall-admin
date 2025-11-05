@@ -24,7 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "google" && account?.id_token && profile) {
         try {
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/google/verify`,
+            `${process.env.API_URL}/auth/google/verify`,
             {
               method: "POST",
               headers: {
