@@ -14,6 +14,7 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
   }
 
   const url = `${process.env.API_URL}${endpoint}`;
+  console.log("API URL:", url);
 
   const response = await fetch(url, {
     ...options,
@@ -24,7 +25,6 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
     },
   });
 
-  // response를 반환하기 전에 clone해서 로깅 (백그라운드 실행)
   logResponse(response.clone());
 
   return response;
@@ -45,6 +45,7 @@ export async function fetchBackendJson<T>(
 }
 
 type ResponseLog = Partial<Omit<Response, "body" | "headers">> & {
+  url?: string;
   headers?: Record<string, string>;
   body?: string;
   json?: Record<string, unknown>;
@@ -57,10 +58,10 @@ const logResponse = async (response: Response) => {
       headers: Object.fromEntries(response.headers),
     };
 
-    const contentType = response.headers.get('content-type');
+    const contentType = response.headers.get("content-type");
 
     // JSON 응답인 경우
-    if (contentType?.includes('application/json')) {
+    if (contentType?.includes("application/json")) {
       try {
         content.json = await response.json();
       } catch {
@@ -72,11 +73,7 @@ const logResponse = async (response: Response) => {
       content.body = await response.text();
     }
 
-    serverLog.log(
-      new Date().toISOString(),
-      "::",
-      JSON.stringify(content, null, 2)
-    );
+    serverLog.log(new Date().toISOString(), "::", JSON.stringify(content, null, 2));
   } catch (error) {
     serverLog.error(new Date().toISOString(), ":: Response logging failed:", error);
   }

@@ -18,10 +18,10 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-black overflow-scroll scrollbar-hide">
+    <div className="flex min-h-screen bg-zinc-50 dark:bg-black overflow-scroll scrollbar-thin">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <main
-        className={`flex-1 transition-all duration-300 ml-16 lg:${isSidebarOpen ? "ml-64" : "ml-16"}`}
+        className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-16"}`}
       >
         {children}
       </main>

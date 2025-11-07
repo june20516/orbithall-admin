@@ -2,8 +2,11 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getSiteById, getSiteStats, getSitePosts } from "@/actions/sites";
 import Link from "next/link";
-import { Button } from "@/components/Button";
+import { Button } from "@/app/_components/Button";
 import { Edit } from "lucide-react";
+import { DataBoundary } from "@/app/_components/DataBoundary";
+import { PostsList } from "./_components/PostsList";
+import { SiteStatsDisplay } from "./_components/SiteStats";
 
 export default async function SiteDetailPage({
   params,
@@ -30,29 +33,13 @@ export default async function SiteDetailPage({
     );
   }
 
-  // 각 데이터를 독립적으로 불러오기
+  // 사이트 정보 불러오기 (필수)
   let site;
   let siteError;
   try {
     site = await getSiteById(siteId);
   } catch (error) {
     siteError = error;
-  }
-
-  let stats;
-  let statsError;
-  try {
-    stats = await getSiteStats(siteId);
-  } catch (error) {
-    statsError = error;
-  }
-
-  let posts;
-  let postsError;
-  try {
-    posts = await getSitePosts(siteId);
-  } catch (error) {
-    postsError = error;
   }
 
   // 사이트 정보는 필수이므로 실패 시 에러 페이지 표시
@@ -160,99 +147,19 @@ export default async function SiteDetailPage({
           <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             통계
           </h2>
-          {statsError ? (
-            <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-              <p className="text-sm text-red-700 dark:text-red-400">
-                통계 정보를 불러오는데 실패했습니다
-              </p>
-              <p className="mt-1 text-xs text-red-600 dark:text-red-500">
-                {statsError instanceof Error ? statsError.message : "알 수 없는 오류"}
-              </p>
-            </div>
-          ) : stats ? (
-            <div className="grid grid-cols-3 gap-6">
-              <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-950">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">게시글 수</p>
-                <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-                  {stats.postCount}
-                </p>
-              </div>
-              <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-950">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">댓글 수</p>
-                <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-                  {stats.commentCount}
-                </p>
-              </div>
-              <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-950">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">삭제된 댓글</p>
-                <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-                  {stats.deletedCommentCount}
-                </p>
-              </div>
-            </div>
-          ) : null}
+          <DataBoundary fetchData={() => getSiteStats(siteId)}>
+            {(stats) => <SiteStatsDisplay stats={stats} />}
+          </DataBoundary>
         </div>
 
         {/* 게시글 목록 */}
-        <div className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              게시글 목록
-            </h2>
-          </div>
-          {postsError ? (
-            <div className="p-6">
-              <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-                <p className="text-sm text-red-700 dark:text-red-400">
-                  게시글 목록을 불러오는데 실패했습니다
-                </p>
-                <p className="mt-1 text-xs text-red-600 dark:text-red-500">
-                  {postsError instanceof Error ? postsError.message : "알 수 없는 오류"}
-                </p>
-              </div>
-            </div>
-          ) : !posts || posts.length === 0 ? (
-            <div className="p-6 text-center text-zinc-600 dark:text-zinc-400">
-              등록된 게시글이 없습니다
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-                <thead className="bg-zinc-50 dark:bg-zinc-950">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      제목
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      URL
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      댓글 수
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {posts.map((post) => (
-                    <tr key={post.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                          {post.title || "(제목 없음)"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="max-w-xs truncate text-sm text-zinc-600 dark:text-zinc-400">
-                          {post.url}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-zinc-900 dark:text-zinc-50">
-                        {post.activeCommentCount}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <div className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-6">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            게시글 목록
+          </h2>
+          <DataBoundary fetchData={() => getSitePosts(siteId)}>
+            {(posts) => <PostsList posts={posts} />}
+          </DataBoundary>
         </div>
       </div>
     </div>
