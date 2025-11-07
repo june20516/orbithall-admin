@@ -1,6 +1,6 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/Button";
+import { Button } from "@/app/_components/Button";
 import { LogOut } from "lucide-react";
 
 export default async function Home() {
@@ -34,9 +34,7 @@ export default async function Home() {
           <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             {session.user.name}
           </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {session.user.email}
-          </p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">{session.user.email}</p>
         </div>
 
         {session.backendToken && (
