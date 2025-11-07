@@ -17,13 +17,12 @@ import type {
 import { revalidatePath } from "next/cache";
 import { fetchBackend, fetchBackendJson } from "./client";
 
-
 /**
  * 사용자가 소유한 모든 사이트 목록 조회
  */
 export async function getSites(): Promise<Site[]> {
   const response = await fetchBackendJson<{ sites: unknown[] }>("/admin/sites");
-  return camelize<Site[]>(response.sites);
+  return camelize<Site[]>(response?.sites);
 }
 
 /**
@@ -91,8 +90,8 @@ export async function getSiteStats(id: number): Promise<SiteStats> {
  * 사이트의 게시글 목록 조회
  */
 export async function getSitePosts(id: number): Promise<SitePost[]> {
-  const response = await fetchBackendJson<{ posts: unknown[] }>(
+  const response = await fetchBackendJson<{ posts: unknown[] } | null>(
     `/admin/sites/${id}/posts`
   );
-  return camelize<SitePost[]>(response.posts);
+  return camelize<SitePost[]>(response?.posts || []);
 }

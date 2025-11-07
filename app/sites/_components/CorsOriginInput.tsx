@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./Button";
+import { Button } from "@/app/_components/Button";
 
 interface CorsOriginInputProps {
   value: string[];
@@ -46,12 +46,10 @@ export function CorsOriginInput({ value, onChange, error }: CorsOriginInputProps
           placeholder="https://example.com"
           className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
         />
-        <Button onClick={handleAdd} >추가</Button>
+        <Button onClick={handleAdd}>추가</Button>
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {value.length > 0 && (
         <div className="space-y-2">
@@ -60,9 +58,7 @@ export function CorsOriginInput({ value, onChange, error }: CorsOriginInputProps
               key={index}
               className="flex items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900"
             >
-              <span className="text-sm text-zinc-900 dark:text-zinc-50">
-                {origin}
-              </span>
+              <span className="text-sm text-zinc-900 dark:text-zinc-50">{origin}</span>
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
