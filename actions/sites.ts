@@ -90,8 +90,6 @@ export async function getSiteStats(id: number): Promise<SiteStats> {
  * 사이트의 게시글 목록 조회
  */
 export async function getSitePosts(id: number): Promise<SitePost[]> {
-  const response = await fetchBackendJson<{ posts: unknown[] } | null>(
-    `/admin/sites/${id}/posts`
-  );
-  return camelize<SitePost[]>(response?.posts || []);
+  const response = await fetchBackendJson<unknown | null>(`/admin/sites/${id}/posts`);
+  return camelize<SitePost[]>(response || []);
 }
