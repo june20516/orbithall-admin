@@ -170,7 +170,9 @@ app/sites/[id]/posts/[slug]/
 
 - `params: Promise<{ id: string; slug: string }>`, `searchParams: Promise<{ page?: string }>` (Next.js 16)
 - 인증/`backendToken` 확인은 기존 `app/sites/[id]/page.tsx`와 동일한 방식
-- `slug`는 Next.js가 디코딩한 값을 그대로 사용 (`getPostComments`에서 다시 인코딩)
+- Next.js 16은 dynamic segment 값을 **인코딩된 상태 그대로** 전달함 (dev/production 모두 확인: `/param-probe/%ED%95%9C` → `params.slug === "%ED%95%9C"`)
+  - 따라서 페이지에서 `decodeURIComponent`로 디코딩하고, 잘못된 인코딩이면 원본 값 사용
+  - `getPostComments`에는 디코딩된 slug를 넘기고, action에서 다시 인코딩
 - 페이지 번호 파싱: 정수가 아니거나 1 미만이면 1
 - 헤더: `← 사이트로` 링크(`/sites/{id}`), 제목은 slug 표시
   - 게시글 단건 조회 API가 없어 제목 대신 slug를 사용 (목록 API 재호출 회피)
@@ -195,7 +197,7 @@ app/sites/[id]/posts/[slug]/
 - props: `masked?: string`, `unmasked?: string`
 - 기본은 `masked` 표시, 클릭하면 `unmasked`로 전환, 다시 클릭하면 마스킹
 - 둘 다 없으면 `-` 표시, `unmasked`가 없으면 토글 없이 `masked`만 표시
-- `<button type="button">`으로 구현하고 `aria-label`로 상태 표시
+- `<button type="button">`으로 구현하고 `aria-pressed`로 상태 표시 (`aria-label`은 IP 텍스트를 가리므로 사용하지 않음)
 
 #### `Pagination.tsx`
 
