@@ -146,7 +146,7 @@ export async function getPostComments(
 ```
 
 - `offset = (page - 1) * COMMENTS_PAGE_SIZE`
-- slug는 `encodeURIComponent`로 인코딩하여 경로에 넣음 (slug는 위젯의 `data-post-slug`로 사용자가 임의 지정)
+- slug는 Go net/url 기본 path escape와 같은 규칙(`encodeSlugSegment`: `!'()*` 인코딩, `$&+,:;=@` 유지)으로 인코딩하여 경로에 넣음. `encodeURIComponent`를 그대로 쓰면 백엔드 chi가 RawPath로 라우팅해 `c++` 같은 slug가 인코딩된 채 조회되어 404가 남
 - 쿼리 문자열은 `URLSearchParams`로 생성
 - 응답은 기존 `fetchBackendJson` + `camelize` 패턴 사용
 - `comments`가 `null`이면 `[]`로 정규화
