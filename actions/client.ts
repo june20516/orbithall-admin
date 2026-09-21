@@ -84,10 +84,11 @@ const logBackendResponse = async (
       formatBodyForLog(await response.text(), response.headers.get("content-type"))
     );
 
-    if (response.ok) {
-      serverLog.info(summary, body);
+    const log = response.ok ? serverLog.info : serverLog.error;
+    if (body) {
+      log(summary, body);
     } else {
-      serverLog.error(summary, body);
+      log(summary);
     }
   } catch (error) {
     serverLog.error("[backend] 응답 로깅 실패:", error);

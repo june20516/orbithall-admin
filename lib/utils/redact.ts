@@ -17,12 +17,21 @@ const SECRET_KEYS = new Set([
   "authorization",
 ]);
 
-/** IP 주소를 담는 키 (ip, ip_address, ip_address_masked, ip_address_unmasked 등) */
-const IP_KEY_PATTERN = /^ip(_address.*)?$/;
+/**
+ * IP 주소를 담는 키 (ip, ip_address*, client_ip, remote_addr, x_forwarded_for 등)
+ * 백엔드(orbithall) 모델의 JSON 태그를 기준으로 하며, 새 IP·이메일 필드가 생기면 함께 갱신한다
+ */
+const IP_KEY_PATTERN = /(^|_)ip(_|$)|^ip_addr|remote_addr|forwarded_for/;
 
-/** camelCase/snake_case 키를 snake_case 소문자로 맞춤 */
+/** 이메일을 담는 키 (email, author_email, user_email 등) */
+const EMAIL_KEY_PATTERN = /(^|_)email$/;
+
+/** camelCase/PascalCase/UPPER_SNAKE 키를 snake_case 소문자로 맞춤 (예: IPAddress → ip_address) */
 function normalizeKey(key: string): string {
-  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`).toLowerCase();
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .toLowerCase();
 }
 
 /**
@@ -55,24 +64,28 @@ function maskApiKey(apiKey: string): string {
   return prefix ? `${prefix[0]}****` : "****";
 }
 
+/** 민감 키의 값을 마스킹 (문자열이 아니면 통째로 가리고, null은 그대로 둔다) */
+function maskSensitiveValue(value: unknown, mask: (text: string) => string): unknown {
+  if (value === null) {
+    return null;
+  }
+  return typeof value === "string" ? mask(value) : "[REDACTED]";
+}
+
 function redactField(key: string, value: unknown): unknown {
   const normalizedKey = normalizeKey(key);
 
   if (SECRET_KEYS.has(normalizedKey)) {
     return "[REDACTED]";
   }
-
-  if (typeof value === "string") {
-    if (IP_KEY_PATTERN.test(normalizedKey)) {
-      return maskIpForLog(value);
-    }
-    if (normalizedKey === "api_key") {
-      return maskApiKey(value);
-    }
-    if (normalizedKey === "email") {
-      return maskEmail(value);
-    }
-    return value;
+  if (IP_KEY_PATTERN.test(normalizedKey)) {
+    return maskSensitiveValue(value, maskIpForLog);
+  }
+  if (normalizedKey === "api_key") {
+    return maskSensitiveValue(value, maskApiKey);
+  }
+  if (EMAIL_KEY_PATTERN.test(normalizedKey)) {
+    return maskSensitiveValue(value, maskEmail);
   }
 
   return redactForLog(value);
@@ -102,5 +115,5 @@ export function truncateForLog(text: string): string {
   if (text.length <= MAX_LOG_LENGTH) {
     return text;
   }
-  return `${text.slice(0, MAX_LOG_LENGTH)}...(총 ${text.length}자 중 ${MAX_LOG_LENGTH}자)`;
+  return `${text.slice(0, MAX_LOG_LENGTH)}...(${text.length}자 중 앞 ${MAX_LOG_LENGTH}자만 표시)`;
 }
