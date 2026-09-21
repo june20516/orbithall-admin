@@ -8,9 +8,10 @@
 
 ### 구현 사항
 
-- **파일**: `actions/client.ts`, `lib/utils/logger.ts`
-- **Server Actions**: `'use server'` 지시어로 선언된 함수는 항상 서버에서만 실행됨
-- **로깅 함수**: `serverLog.log()` 사용 (console.debug는 Node.js에서 기본 출력 안됨)
+- **파일**: `actions/client.ts`, `lib/utils/logger.ts`, `lib/utils/redact.ts`
+- **서버 전용 모듈**: `'use server'`로 export한 함수는 클라이언트가 POST로 직접 호출할 수 있는 공개 endpoint가 된다. 백엔드 토큰을 붙이는 `actions/client.ts`는 `'use server'` 대신 `import 'server-only'`로 두고, `actions/sites.ts` 등 server action에서만 호출한다
+- **로깅 함수**: `serverLog.info()`/`serverLog.error()` 사용 (console.debug는 Node.js에서 기본 출력 안됨)
+- **민감 정보 마스킹**: 응답 본문은 `redactForLog`로 IP·토큰·API Key·이메일을 가리고 `truncateForLog`로 2,000자에서 자른다
 - **Response 처리**:
   - `response.clone()`을 사용하여 원본 response는 호출자에게 반환
   - Content-Type 확인 후 text()로 한 번만 읽고, JSON 파싱 시도

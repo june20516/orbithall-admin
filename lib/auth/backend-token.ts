@@ -13,15 +13,19 @@ const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
 export async function getBackendToken(): Promise<string | null> {
   const cookieStore = await cookies();
 
-  // 운영(HTTPS)은 __Secure- 접두사 쿠키를 쓰므로 실제 존재하는 쿠키로 판단한다
+  // Auth.js는 HTTPS(운영)에서 __Secure- 접두사 쿠키, HTTP(로컬)에서 접두사 없는 쿠키를 쓴다
+  // 실제 존재하는 쿠키로 판단하며, 두 쿠키가 함께 있으면 __Secure- 쿠키를 우선한다
   // 큰 세션은 .0, .1로 나뉘어 저장될 수 있어 접두사로 비교한다
   const secureCookie = cookieStore
     .getAll()
     .some((cookie) => cookie.name.startsWith(SECURE_SESSION_COOKIE));
 
+  // Authorization 헤더 fallback을 쓰지 않도록 cookie 헤더만 넘긴다 (auth()와 같은 입력)
+  const cookieHeader = (await headers()).get("cookie") ?? "";
+
   const token = await getToken({
-    req: { headers: await headers() },
-    secret: process.env.AUTH_SECRET,
+    req: { headers: { cookie: cookieHeader } },
+    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
     secureCookie,
   });
 

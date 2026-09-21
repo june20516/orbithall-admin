@@ -1,13 +1,29 @@
-"use server";
+import "server-only";
 
 import { getBackendToken } from "@/lib/auth/backend-token";
 import { serverLog } from "@/lib/utils/logger";
 import { redactForLog, truncateForLog } from "@/lib/utils/redact";
 
 /**
+ * 백엔드 API URL을 만든다
+ * endpoint로 host나 port가 바뀌어 토큰이 다른 서버로 가지 않도록 API_URL과 같은 origin인지 확인한다
+ */
+function buildBackendUrl(endpoint: string): string {
+  const apiUrl = process.env.API_URL ?? "";
+  const backendUrl = `${apiUrl}${endpoint}`;
+
+  if (!endpoint.startsWith("/") || new URL(backendUrl).origin !== new URL(apiUrl).origin) {
+    throw new Error(`허용되지 않은 백엔드 경로입니다: ${endpoint}`);
+  }
+
+  return backendUrl;
+}
+
+/**
  * 백엔드 API 호출 헬퍼
  */
 export async function fetchBackend(endpoint: string, options: RequestInit = {}) {
+  const url = buildBackendUrl(endpoint);
   const backendToken = await getBackendToken();
 
   if (!backendToken) {
@@ -15,7 +31,7 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
   }
 
   const startedAt = Date.now();
-  const response = await fetch(`${process.env.API_URL}${endpoint}`, {
+  const response = await fetch(url, {
     ...options,
     headers: {
       ...options.headers,

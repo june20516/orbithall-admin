@@ -1,4 +1,3 @@
-import { DefaultSession } from "next-auth";
 import { GoogleVerifyResponse } from "./auth";
 
 declare module "next-auth" {
