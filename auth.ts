@@ -57,9 +57,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      // 세션에 백엔드 정보 추가
+      // session 반환값은 /api/auth/session으로 브라우저에 노출되므로 백엔드 토큰은 넣지 않는다
+      // 토큰은 JWT 쿠키에만 두고 서버에서 getBackendToken()으로 읽는다
       if (token.backendToken) {
-        session.backendToken = token.backendToken as string;
         session.backendUser = token.backendUser as GoogleVerifyResponse["user"];
       }
 

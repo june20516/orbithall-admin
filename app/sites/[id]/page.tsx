@@ -21,7 +21,7 @@ export default async function SiteDetailPage({
     redirect("/login");
   }
 
-  if (!session.backendToken) {
+  if (!session.backendUser) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <div className="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-900/20">
@@ -158,7 +158,7 @@ export default async function SiteDetailPage({
             게시글 목록
           </h2>
           <DataBoundary fetchData={() => getSitePosts(siteId)}>
-            {(posts) => <PostsList posts={posts} />}
+            {(posts) => <PostsList siteId={siteId} posts={posts} />}
           </DataBoundary>
         </div>
       </div>

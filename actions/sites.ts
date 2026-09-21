@@ -5,7 +5,6 @@
  * 백엔드 /admin/sites 엔드포인트와 통신
  */
 
-import { auth } from "@/auth";
 import { camelize, snakify } from "@/lib/utils/camelize";
 import type {
   Site,
