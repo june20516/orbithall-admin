@@ -55,14 +55,17 @@ export interface SiteStats {
 
 /**
  * Site의 Post 정보
+ * 백엔드 GET /admin/sites/{id}/posts 응답 기준
+ * activeCommentCount, deletedCommentCount는 0이면 응답에서 생략됨 (omitempty)
  */
 export interface SitePost {
   id: number;
   siteId: number;
-  url: string;
-  title?: string;
-  activeCommentCount: number;
-  deletedCommentCount: number;
+  slug: string;
+  title: string;
+  commentCount: number;
+  activeCommentCount?: number;
+  deletedCommentCount?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -158,7 +158,7 @@ export default async function SiteDetailPage({
             게시글 목록
           </h2>
           <DataBoundary fetchData={() => getSitePosts(siteId)}>
-            {(posts) => <PostsList posts={posts} />}
+            {(posts) => <PostsList siteId={siteId} posts={posts} />}
           </DataBoundary>
         </div>
       </div>
