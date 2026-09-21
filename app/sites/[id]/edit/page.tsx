@@ -34,10 +34,6 @@ export default function EditSitePage() {
     resolver: zodResolver(siteUpdateSchema),
   });
 
-  useEffect(() => {
-    loadSite();
-  }, [siteId]);
-
   const loadSite = async () => {
     setIsLoading(true);
     setError(null);
@@ -57,6 +53,11 @@ export default function EditSitePage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트와 siteId 변경 시 사이트 정보를 불러오는 의도된 effect (초기 상태가 이미 로딩 중이라 연쇄 렌더링 없음)
+    loadSite();
+  }, [siteId]);
 
   const onSubmit = async (data: SiteUpdateFormData) => {
     setIsSubmitting(true);

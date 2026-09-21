@@ -37,7 +37,7 @@ export default async function Home() {
           <p className="text-sm text-zinc-600 dark:text-zinc-400">{session.user.email}</p>
         </div>
 
-        {session.backendToken && (
+        {session.backendUser && (
           <div className="rounded-lg bg-green-50 p-6 dark:bg-green-900/20">
             <p className="text-sm font-semibold text-green-700 dark:text-green-400">
               ✓ 백엔드 인증 완료
@@ -48,7 +48,7 @@ export default async function Home() {
           </div>
         )}
 
-        {!session.backendToken && (
+        {!session.backendUser && (
           <div className="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-900/20">
             <p className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
               ⚠ 백엔드 인증 실패
