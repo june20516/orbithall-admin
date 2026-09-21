@@ -3,7 +3,6 @@ import { GoogleVerifyResponse } from "./auth";
 
 declare module "next-auth" {
   interface Session {
-    backendToken?: string;
     backendUser?: GoogleVerifyResponse["user"];
   }
 }

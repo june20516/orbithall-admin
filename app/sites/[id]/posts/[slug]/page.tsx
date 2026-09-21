@@ -45,7 +45,7 @@ export default async function PostCommentsPage({
     redirect("/login");
   }
 
-  if (!session.backendToken) {
+  if (!session.backendUser) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <div className="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-900/20">

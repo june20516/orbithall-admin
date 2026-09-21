@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getBackendToken } from "@/lib/auth/backend-token";
 import { serverLog } from "@/lib/utils/logger";
 import { redactForLog, truncateForLog } from "@/lib/utils/redact";
 
@@ -8,9 +8,9 @@ import { redactForLog, truncateForLog } from "@/lib/utils/redact";
  * 백엔드 API 호출 헬퍼
  */
 export async function fetchBackend(endpoint: string, options: RequestInit = {}) {
-  const session = await auth();
+  const backendToken = await getBackendToken();
 
-  if (!session?.backendToken) {
+  if (!backendToken) {
     throw new Error("백엔드 인증이 필요합니다");
   }
 
@@ -19,7 +19,7 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
     ...options,
     headers: {
       ...options.headers,
-      Authorization: `Bearer ${session.backendToken}`,
+      Authorization: `Bearer ${backendToken}`,
       "Content-Type": "application/json",
     },
   });
