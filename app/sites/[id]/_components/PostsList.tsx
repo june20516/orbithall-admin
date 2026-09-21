@@ -37,7 +37,7 @@ export function PostsList({ siteId, posts }: PostsListProps) {
 
             return (
               <tr key={post.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                <td className="whitespace-nowrap px-6 py-4">
+                <td className="min-w-48 px-6 py-4 wrap-anywhere">
                   <Link
                     href={`/sites/${siteId}/posts/${encodeURIComponent(post.slug)}`}
                     className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"

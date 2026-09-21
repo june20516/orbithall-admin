@@ -17,7 +17,7 @@ interface DataBoundaryProps<T> {
  *   fetchData={() => getSitePosts(siteId)}
  *   loadingFallback={<PostsSkeleton />}
  * >
- *   {(posts) => <PostsList posts={posts} />}
+ *   {(posts) => <PostsList siteId={siteId} posts={posts} />}
  * </DataBoundary>
  */
 export async function DataBoundary<T>({
