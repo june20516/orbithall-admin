@@ -289,7 +289,7 @@ export function CommentItem({ comment }: CommentItemProps) {
   return (
     <div className={`py-4 ${comment.isDeleted ? "opacity-60" : ""}`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+        <span className="font-medium text-zinc-900 wrap-anywhere dark:text-zinc-50">
           {comment.authorName}
         </span>
         <span className="text-zinc-500 dark:text-zinc-400">
@@ -315,7 +315,7 @@ export function CommentItem({ comment }: CommentItemProps) {
           />
         </span>
       </div>
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm text-zinc-800 dark:text-zinc-200">
+      <p className="mt-2 whitespace-pre-wrap wrap-anywhere text-sm text-zinc-800 dark:text-zinc-200">
         {comment.content}
       </p>
     </div>
