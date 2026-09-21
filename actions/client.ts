@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { serverLog } from "@/lib/utils/logger";
+import { redactForLog, truncateForLog } from "@/lib/utils/redact";
 
 /**
  * 백엔드 API 호출 헬퍼
@@ -13,10 +14,8 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
     throw new Error("백엔드 인증이 필요합니다");
   }
 
-  const url = `${process.env.API_URL}${endpoint}`;
-  console.log("API URL:", url);
-
-  const response = await fetch(url, {
+  const startedAt = Date.now();
+  const response = await fetch(`${process.env.API_URL}${endpoint}`, {
     ...options,
     headers: {
       ...options.headers,
@@ -25,7 +24,12 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
     },
   });
 
-  logResponse(response.clone());
+  await logBackendResponse(
+    options.method ?? "GET",
+    endpoint,
+    response.clone(),
+    Date.now() - startedAt
+  );
 
   return response;
 }
@@ -44,37 +48,48 @@ export async function fetchBackendJson<T>(
   return response.json();
 }
 
-type ResponseLog = Partial<Omit<Response, "body" | "headers">> & {
-  url?: string;
-  headers?: Record<string, string>;
-  body?: string;
-  json?: Record<string, unknown>;
-};
-const logResponse = async (response: Response) => {
-  try {
-    const content: ResponseLog = {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers),
-    };
+/**
+ * 응답 본문을 로그용 문자열로 변환
+ * JSON은 민감 필드를 마스킹하고, 파싱할 수 없으면 본문을 남기지 않는다
+ */
+function formatBodyForLog(body: string, contentType: string | null): string {
+  if (!body) {
+    return "";
+  }
 
-    const contentType = response.headers.get("content-type");
-
-    // JSON 응답인 경우
-    if (contentType?.includes("application/json")) {
-      try {
-        content.json = await response.json();
-      } catch {
-        // JSON 파싱 실패 시 텍스트로 읽기
-        content.body = await response.text();
-      }
-    } else {
-      // JSON이 아닌 경우 텍스트로 읽기
-      content.body = await response.text();
+  if (contentType?.includes("application/json")) {
+    try {
+      return JSON.stringify(redactForLog(JSON.parse(body)));
+    } catch {
+      return "[JSON 파싱 실패로 본문 생략]";
     }
+  }
 
-    serverLog.log(new Date().toISOString(), "::", JSON.stringify(content, null, 2));
+  return body;
+}
+
+/**
+ * 백엔드 응답을 추적용으로 로그에 남김 (민감 정보 마스킹)
+ * 예: [backend] GET /admin/sites/1/posts 200 42ms [...]
+ */
+const logBackendResponse = async (
+  method: string,
+  endpoint: string,
+  response: Response,
+  durationMs: number
+) => {
+  try {
+    const summary = `[backend] ${method} ${endpoint} ${response.status} ${durationMs}ms`;
+    const body = truncateForLog(
+      formatBodyForLog(await response.text(), response.headers.get("content-type"))
+    );
+
+    if (response.ok) {
+      serverLog.info(summary, body);
+    } else {
+      serverLog.error(summary, body);
+    }
   } catch (error) {
-    serverLog.error(new Date().toISOString(), ":: Response logging failed:", error);
+    serverLog.error("[backend] 응답 로깅 실패:", error);
   }
 };
