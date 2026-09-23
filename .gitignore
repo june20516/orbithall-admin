@@ -42,3 +42,10 @@ next-env.d.ts
 
 # secret files
 client_secret_*.json
+
+# Next.js next dev가 자동 생성하는 AI 에이전트 안내 파일
+/AGENTS.md
+/CLAUDE.md
+
+# Claude Code 로컬 설정과 메모
+/.claude/
