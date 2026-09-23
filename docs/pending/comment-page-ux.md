@@ -23,4 +23,4 @@
 - **제목·Slug 중복 (불편하면):** 게시글 목록에서 위젯이 slug를 title로 저장하는 설계라 두 칸이 같은 값으로 보임 → 필요해지면 title == slug일 때 Slug 칸 처리
 
 ### 제외
-- 댓글 삭제 (별도 과제: `admin-comment-delete.md`)
+- 댓글 삭제 (완료: `docs/completed/admin-comment-delete.md`)

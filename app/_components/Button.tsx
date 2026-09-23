@@ -2,15 +2,18 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
 import { LucideIcon } from "lucide-react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  priority?: "primary" | "secondary";
+  priority?: "primary" | "secondary" | "danger";
   variant?: "filled" | "outlined" | "text";
   icon?: LucideIcon;
 }
 
 /**
  * 버튼 컴포넌트
- * priority: primary (기본), secondary
+ * priority: primary (기본), secondary, danger (삭제 등 되돌릴 수 없는 동작)
  * variant: filled (기본), outlined, text
+ *
+ * className은 레이아웃·간격 조정용. 색상 클래스는 넘겨도 적용되지 않을 수 있음
+ * (Tailwind는 CSS를 자체 순서로 생성하므로 className을 뒤에 붙여도 우선하지 않음)
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -41,6 +44,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         outlined:
           "border border-zinc-400 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800",
         text: "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800",
+      },
+      danger: {
+        filled:
+          "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:text-white dark:hover:bg-red-700",
+        outlined:
+          "border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white dark:border-red-500 dark:text-red-400 dark:hover:bg-red-500 dark:hover:text-white",
+        text: "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
       },
     };
 

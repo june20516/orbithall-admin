@@ -12,7 +12,7 @@ const meta = {
   argTypes: {
     priority: {
       control: "select",
-      options: ["primary", "secondary"],
+      options: ["primary", "secondary", "danger"],
       description: "버튼의 우선순위",
     },
     variant: {
@@ -138,6 +138,34 @@ export const SecondaryTextWithIcon: Story = {
   },
 };
 
+// Danger
+export const DangerFilled: Story = {
+  args: {
+    children: "삭제",
+    priority: "danger",
+    variant: "filled",
+    icon: Trash2,
+  },
+};
+
+export const DangerOutlined: Story = {
+  args: {
+    children: "삭제",
+    priority: "danger",
+    variant: "outlined",
+    icon: Trash2,
+  },
+};
+
+export const DangerText: Story = {
+  args: {
+    children: "삭제",
+    priority: "danger",
+    variant: "text",
+    icon: Trash2,
+  },
+};
+
 // Disabled States
 export const PrimaryDisabled: Story = {
   args: {
@@ -186,6 +214,21 @@ export const AllVariants: Story = {
             Outlined
           </Button>
           <Button priority="secondary" variant="text">
+            Text
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-4 text-lg font-semibold">Danger</h3>
+        <div className="flex gap-4">
+          <Button priority="danger" variant="filled">
+            Filled
+          </Button>
+          <Button priority="danger" variant="outlined">
+            Outlined
+          </Button>
+          <Button priority="danger" variant="text">
             Text
           </Button>
         </div>
