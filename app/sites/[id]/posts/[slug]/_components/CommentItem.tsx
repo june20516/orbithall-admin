@@ -1,4 +1,5 @@
 import type { AdminComment } from "@/types/comment";
+import { DeleteCommentButton } from "./DeleteCommentButton";
 import { IpAddress } from "./IpAddress";
 
 interface CommentItemProps {
@@ -16,6 +17,7 @@ function formatKst(isoString: string): string {
 /**
  * 댓글 한 건 표시
  * 삭제된 댓글은 흐리게 처리하고 "삭제됨" 뱃지와 삭제 시각을 함께 표시
+ * 삭제되지 않은 댓글에만 삭제 버튼을 표시
  */
 export function CommentItem({ comment }: CommentItemProps) {
   return (
@@ -46,6 +48,13 @@ export function CommentItem({ comment }: CommentItemProps) {
             unmasked={comment.ipAddressUnmasked}
           />
         </span>
+        {!comment.isDeleted && (
+          <DeleteCommentButton
+            commentId={comment.id}
+            authorName={comment.authorName}
+            hasReplies={(comment.replies?.length ?? 0) > 0}
+          />
+        )}
       </div>
       <p className="mt-2 whitespace-pre-wrap wrap-anywhere text-sm text-zinc-800 dark:text-zinc-200">
         {comment.content}

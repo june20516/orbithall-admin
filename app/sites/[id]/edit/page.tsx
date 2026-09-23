@@ -277,8 +277,9 @@ export default function EditSitePage() {
           <Button
             type="button"
             onClick={() => setShowDeleteConfirm(true)}
+            priority="danger"
             icon={Trash2}
-            className="mt-4 bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+            className="mt-4"
           >
             사이트 삭제
           </Button>
@@ -287,7 +288,7 @@ export default function EditSitePage() {
 
       {/* 삭제 확인 다이얼로그 */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6 dark:bg-zinc-900">
             <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               사이트 삭제 확인
@@ -300,8 +301,9 @@ export default function EditSitePage() {
               <Button
                 onClick={handleDelete}
                 disabled={isSubmitting}
+                priority="danger"
                 icon={Trash2}
-                className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                className="flex-1"
               >
                 {isSubmitting ? "삭제 중..." : "삭제"}
               </Button>
