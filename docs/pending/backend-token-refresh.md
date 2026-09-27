@@ -16,8 +16,12 @@
 2. 백엔드: 토큰 갱신 API (백엔드 명세)
 3. **어드민: 갱신 연동 (이 문서)**
 
+## 확정 사항 (2026-09-28)
+- **수명:** Access Token 7일, Refresh Token 유휴 만료 14일, 절대 만료 30일 (명세 초안의 Access Token 15분에서 변경)
+- **유예 시간 내 재사용:** 새 토큰 쌍을 발급하지 않고 이미 발급한 쌍을 그대로 돌려주는 방식으로 백엔드에 전달함 (명세 3.2절 수정 예정)
+
 ## 백엔드 명세 요약
-- Access Token(JWT, 15분) + 회전되는 Refresh Token(불투명 값, 유휴 14일·절대 30일)
+- Access Token(JWT) + 회전되는 Refresh Token(불투명 값). 수명은 위 확정 사항 기준
 - `POST /auth/google/verify` 응답에 `access_token`, `access_token_expires_at`, `refresh_token`, `refresh_token_expires_at` 추가 (`token`은 deprecated)
 - `POST /auth/refresh {refresh_token}` → 새 토큰 쌍. Refresh Token은 1회용, 30초 유예 후 재사용하면 계열 전체 폐기
 - `POST /auth/logout {refresh_token}` → 계열 폐기, 항상 204
@@ -32,7 +36,7 @@
 - **만료 시각:** 응답 필드를 사용하고, 1단계의 JWT `exp` 직접 읽기(`lib/auth/jwt-expiry.ts`)를 제거
 - **선제 갱신:** `proxy.ts`에서 만료까지 60초 미만이면 갱신하고 새 세션 쿠키를 응답에 실음. 같은 요청의 렌더링에서도 새 토큰을 쓰도록 요청 쿠키도 교체
 - **사후 갱신:** `/admin/*`이 `401 EXPIRED_TOKEN`이면 한 번만 갱신 후 재시도, 다시 401이면 재로그인
-- **실패 처리:** 1단계는 만료 시 `jwt` 콜백에서 `null`을 반환해 세션을 끝내는데, 이를 명세 방식(토큰 삭제 + `backendAuthError = "RefreshFailed"` + `/login`)으로 교체. 그대로 두면 Access Token이 15분이 된 뒤 15분마다 로그아웃됨
+- **실패 처리:** 1단계는 만료 시 `jwt` 콜백에서 `null`을 반환해 세션을 끝내는데, 이를 명세 방식(토큰 삭제 + `backendAuthError = "RefreshFailed"` + `/login`)으로 교체. 그대로 두면 Refresh Token이 남아 있어도 Access Token 만료(7일)마다 로그아웃됨
 - **동시 갱신 방지:** 같은 세션의 요청이 동시에 갱신하지 않도록 처리 (유예 시간은 최후 안전장치)
 - **세션 수명:** Auth.js 세션 쿠키 수명을 `refresh_token_expires_at`에 맞춤
 - **로그아웃:** `events.signOut`에서 `POST /auth/logout` 호출, 실패해도 로컬 세션 삭제
@@ -42,6 +46,6 @@
 ### 제외
 - "모든 기기에서 로그아웃", 활성 세션 목록 (명세 9장)
 
-## 백엔드에 확인할 점 (2026-09-28 명세 검토)
+## 명세 검토 메모 (2026-09-28)
 - **에러 본문 형식 (참고, 문제 없음):** 명세 2장의 `{"error":"CODE","message":"..."}`는 `/admin/*`의 실제 응답과 일치함(2026-09-28 로컬 E2E에서 `{"error":"INVALID_TOKEN","message":"Invalid token"}` 확인). 공개 API `/api/*`만 `{"error":{"code":"...","message":"..."}}`로 형식이 다름. 어드민은 두 형식을 모두 읽음
-- **유예 시간 내 재사용 응답(3.2절):** 새 토큰 쌍을 발급하면 같은 계열에 유효한 Refresh Token이 두 갈래로 생김. 이미 발급한 쌍을 그대로 돌려주는 방식이 계열을 하나로 유지해 더 단순할 수 있음
+- ~~유예 시간 내 재사용 응답(3.2절)~~ → 이미 발급한 쌍을 돌려주는 방식으로 전달함 (확정 사항 참고)
