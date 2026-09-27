@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getSites } from "@/actions/sites";
+import { resolvePageErrorMessage } from "@/lib/backend/page-error";
 import Link from "next/link";
 import { Button } from "@/app/_components/Button";
 import { Plus } from "lucide-react";
@@ -31,15 +32,14 @@ export default async function SitesPage() {
   try {
     sites = await getSites();
   } catch (error) {
+    const message = resolvePageErrorMessage(error);
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <div className="rounded-lg bg-red-50 p-6 dark:bg-red-900/20">
           <p className="text-sm font-semibold text-red-700 dark:text-red-400">
             사이트 목록을 불러오는데 실패했습니다
           </p>
-          <p className="mt-2 text-xs text-red-600 dark:text-red-500">
-            {error instanceof Error ? error.message : "알 수 없는 오류"}
-          </p>
+          <p className="mt-2 text-xs text-red-600 dark:text-red-500">{message}</p>
         </div>
       </div>
     );

@@ -6,6 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { createSite } from "@/actions/sites";
+import { LOGIN_EXPIRED_PATH } from "@/lib/constants/auth";
 import { siteCreateSchema, type SiteCreateFormData } from "@/lib/validations/site";
 import { CorsOriginInput } from "@/app/sites/_components/CorsOriginInput";
 import { Button } from "@/app/_components/Button";
@@ -35,11 +36,19 @@ export default function NewSitePage() {
     setError(null);
 
     try {
-      await createSite(data);
-      router.push("/sites");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "사이트 생성에 실패했습니다");
+      const result = await createSite(data);
+      if (result.ok) {
+        router.push("/sites");
+        router.refresh();
+        return;
+      }
+      if (result.loginRequired) {
+        router.replace(LOGIN_EXPIRED_PATH);
+        return;
+      }
+      setError(result.error);
+    } catch {
+      setError("사이트 생성에 실패했습니다");
     } finally {
       setIsSubmitting(false);
     }

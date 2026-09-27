@@ -1,16 +1,19 @@
 import { ReactElement, ReactNode, Suspense } from "react";
+import { resolvePageErrorMessage } from "@/lib/backend/page-error";
 import { DefaultSkeleton } from "./Skeleton";
 
 interface DataBoundaryProps<T> {
   fetchData: () => Promise<T>;
   children: (data: T) => ReactElement;
-  fallback?: (error: Error) => ReactElement;
+  /** 실패 시 표시할 화면 (message는 사용자용 안내 문구) */
+  fallback?: (message: string) => ReactElement;
   loadingFallback?: ReactNode;
 }
 
 /**
  * Server Component용 데이터 fetch 및 에러 처리 래퍼
  * Suspense를 사용하여 로딩 상태도 처리
+ * 백엔드 인증이 만료·무효면 로그인 페이지로 보낸다
  *
  * @example
  * <DataBoundary
@@ -45,29 +48,31 @@ async function DataFetcher<T>({
 }: {
   fetchData: () => Promise<T>;
   children: (data: T) => ReactElement;
-  fallback?: (error: Error) => ReactElement;
+  fallback?: (message: string) => ReactElement;
 }) {
+  let data: T;
   try {
-    const data = await fetchData();
-    return children(data);
+    data = await fetchData();
   } catch (error) {
-    const err = error instanceof Error ? error : new Error("알 수 없는 오류");
+    const message = resolvePageErrorMessage(error);
 
     if (fallback) {
-      return fallback(err);
+      return fallback(message);
     }
 
-    return <DefaultErrorFallback error={err} />;
+    return <DefaultErrorFallback message={message} />;
   }
+
+  return children(data);
 }
 
-function DefaultErrorFallback({ error }: { error: Error }) {
+function DefaultErrorFallback({ message }: { message: string }) {
   return (
     <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
       <p className="text-sm text-red-700 dark:text-red-400">
         데이터를 불러오는데 실패했습니다
       </p>
-      <p className="mt-1 text-xs text-red-600 dark:text-red-500">{error.message}</p>
+      <p className="mt-1 text-xs text-red-600 dark:text-red-500">{message}</p>
     </div>
   );
 }

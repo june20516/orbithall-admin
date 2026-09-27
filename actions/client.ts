@@ -1,8 +1,15 @@
 import "server-only";
 
 import { getBackendToken } from "@/lib/auth/backend-token";
+import { isJwtExpired } from "@/lib/auth/jwt-expiry";
+import {
+  BackendError,
+  getBackendErrorMessage,
+  isLoginRequiredError,
+} from "@/lib/backend/errors";
 import { serverLog } from "@/lib/utils/logger";
 import { redactForLog, truncateForLog } from "@/lib/utils/redact";
+import type { ActionResult } from "@/types/action";
 
 /**
  * 백엔드 API URL을 만든다
@@ -21,13 +28,19 @@ function buildBackendUrl(endpoint: string): string {
 
 /**
  * 백엔드 API 호출 헬퍼
+ * 성공(2xx)이 아니면 BackendError를 던진다
+ * 토큰이 없거나 이미 만료됐으면 호출하지 않고 401 BackendError를 던진다
  */
 export async function fetchBackend(endpoint: string, options: RequestInit = {}) {
   const url = buildBackendUrl(endpoint);
   const backendToken = await getBackendToken();
 
   if (!backendToken) {
-    throw new Error("백엔드 인증이 필요합니다");
+    throw new BackendError(401, "MISSING_TOKEN");
+  }
+
+  if (isJwtExpired(backendToken)) {
+    throw new BackendError(401, "EXPIRED_TOKEN");
   }
 
   const startedAt = Date.now();
@@ -47,6 +60,10 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
     Date.now() - startedAt
   );
 
+  if (!response.ok) {
+    throw new BackendError(response.status, await readErrorCode(response));
+  }
+
   return response;
 }
 
@@ -55,13 +72,49 @@ export async function fetchBackendJson<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const response = await fetchBackend(endpoint, options);
+  return response.json();
+}
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API 오류: ${response.status} ${errorText}`);
+/**
+ * Server Action에서 잡은 에러를 클라이언트에 돌려줄 실패 결과로 변환
+ * 백엔드 응답이 아닌 예상 밖의 에러는 서버 로그에 남긴다
+ */
+export function toActionFailure(error: unknown): ActionResult<never> {
+  if (!(error instanceof BackendError)) {
+    serverLog.error("[action] 예상하지 못한 오류:", error);
   }
 
-  return response.json();
+  return {
+    ok: false,
+    error: getBackendErrorMessage(error),
+    loginRequired: isLoginRequiredError(error),
+  };
+}
+
+/**
+ * 백엔드 에러 본문에서 에러 코드를 읽는다 (로그·디버깅용)
+ * /admin/*의 형식 {"error":"CODE","message"}와
+ * /api/*의 형식 {"error":{"code","message"}}를 모두 읽는다
+ * 본문이 JSON이 아니거나 코드가 없으면 undefined
+ */
+async function readErrorCode(response: Response): Promise<string | undefined> {
+  try {
+    const body: unknown = await response.json();
+    if (typeof body !== "object" || body === null || !("error" in body)) {
+      return undefined;
+    }
+
+    const { error } = body;
+    if (typeof error === "string") {
+      return error;
+    }
+    if (typeof error === "object" && error !== null && "code" in error) {
+      return typeof error.code === "string" ? error.code : undefined;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
