@@ -12,7 +12,7 @@
 **불가. 백엔드 배포가 먼저 필요합니다.** 백엔드가 명세를 제안함: orbithall `docs/specs/admin-auth-token-refresh.md` (v1.0 초안, 2026-09-28). 명세 7장 전환 계획의 백엔드 1단계(새 필드, `/auth/refresh`, `/auth/logout` 배포)가 운영 스웨거에 나타나면 시작합니다.
 
 ## 전체 순서에서의 위치
-1. 어드민: 만료 시 재로그인 + 에러 구분 → `backend-auth-error-handling.md` (선행)
+1. 어드민: 만료 시 재로그인 + 에러 구분 → `docs/completed/backend-auth-error-handling.md` (완료)
 2. 백엔드: 토큰 갱신 API (백엔드 명세)
 3. **어드민: 갱신 연동 (이 문서)**
 
