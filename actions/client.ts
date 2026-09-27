@@ -93,8 +93,8 @@ export function toActionFailure(error: unknown): ActionResult<never> {
 
 /**
  * 백엔드 에러 본문에서 에러 코드를 읽는다 (로그·디버깅용)
- * /admin/*의 형식 {"error":"CODE","message"}와
- * /api/*의 형식 {"error":{"code","message"}}를 모두 읽는다
+ * 백엔드는 {"error":{"code","message"}}로 통일할 예정이며,
+ * 전환 전까지 /admin/*의 {"error":"CODE","message"}도 함께 읽는다
  * 본문이 JSON이 아니거나 코드가 없으면 undefined
  */
 async function readErrorCode(response: Response): Promise<string | undefined> {
