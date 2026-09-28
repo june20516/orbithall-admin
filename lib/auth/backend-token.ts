@@ -2,23 +2,22 @@ import "server-only";
 
 import { cookies, headers } from "next/headers";
 import { getToken } from "next-auth/jwt";
+import { getSessionCookieName, isSecureSessionCookie } from "./session-cookie";
 
-/** HTTPS 환경에서 Auth.js가 쓰는 세션 쿠키 이름 */
-const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
+/** 백엔드 호출에 쓸 Access Token과 만료 시각(ms) */
+export interface BackendAccessToken {
+  token: string;
+  expiresAt: number;
+}
 
 /**
- * 암호화된 Auth.js JWT 쿠키에서 백엔드 JWT를 꺼낸다 (서버 전용)
+ * 암호화된 Auth.js JWT 쿠키에서 백엔드 Access Token을 꺼낸다 (서버 전용)
  * session 콜백으로 브라우저에 노출하지 않기 위해 세션 대신 JWT를 직접 복호화한다
+ * 만료가 임박한 토큰은 proxy가 요청 쿠키까지 교체해 두므로 여기서는 갱신하지 않는다
  */
-export async function getBackendToken(): Promise<string | null> {
+export async function getBackendAccessToken(): Promise<BackendAccessToken | null> {
   const cookieStore = await cookies();
-
-  // Auth.js는 HTTPS(운영)에서 __Secure- 접두사 쿠키, HTTP(로컬)에서 접두사 없는 쿠키를 쓴다
-  // 실제 존재하는 쿠키로 판단하며, 두 쿠키가 함께 있으면 __Secure- 쿠키를 우선한다
-  // 큰 세션은 .0, .1로 나뉘어 저장될 수 있어 접두사로 비교한다
-  const secureCookie = cookieStore
-    .getAll()
-    .some((cookie) => cookie.name.startsWith(SECURE_SESSION_COOKIE));
+  const cookieName = getSessionCookieName(cookieStore);
 
   // Authorization 헤더 fallback을 쓰지 않도록 cookie 헤더만 넘긴다 (auth()와 같은 입력)
   const cookieHeader = (await headers()).get("cookie") ?? "";
@@ -26,8 +25,15 @@ export async function getBackendToken(): Promise<string | null> {
   const token = await getToken({
     req: { headers: { cookie: cookieHeader } },
     secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-    secureCookie,
+    secureCookie: isSecureSessionCookie(cookieName),
   });
 
-  return typeof token?.backendToken === "string" ? token.backendToken : null;
+  if (!token?.backendAccessToken || token.backendAccessTokenExpiresAt === undefined) {
+    return null;
+  }
+
+  return {
+    token: token.backendAccessToken,
+    expiresAt: token.backendAccessTokenExpiresAt,
+  };
 }

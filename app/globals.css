@@ -25,6 +25,17 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@layer base {
+  /*
+   * Tailwind v4는 v3와 달리 버튼에 pointer 커서를 주지 않으므로 기본값으로 되돌린다
+   * base 레이어라 disabled:cursor-not-allowed 같은 유틸리티가 우선한다
+   */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
