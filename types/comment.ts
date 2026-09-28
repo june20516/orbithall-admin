@@ -30,11 +30,3 @@ export interface AdminCommentsPage {
   comments: AdminComment[];
   total: number;
 }
-
-/**
- * 댓글 삭제 결과
- * 실패하면 사용자에게 보여줄 error 문구를 포함
- */
-export interface DeleteCommentResult {
-  error?: string;
-}

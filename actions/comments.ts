@@ -6,24 +6,12 @@
  */
 
 import { refresh } from "next/cache";
+import { BackendError } from "@/lib/backend/errors";
 import { COMMENTS_PAGE_SIZE } from "@/lib/constants/comments";
 import { camelize } from "@/lib/utils/camelize";
-import type {
-  AdminComment,
-  AdminCommentsPage,
-  DeleteCommentResult,
-} from "@/types/comment";
-import { fetchBackend, fetchBackendJson } from "./client";
-
-/**
- * 댓글 삭제 실패 시 백엔드 상태 코드별 안내 문구
- */
-const DELETE_COMMENT_ERROR_MESSAGES: Record<number, string> = {
-  400: "잘못된 댓글 ID입니다",
-  401: "로그인이 만료되었습니다. 다시 로그인해 주세요",
-  403: "이 댓글을 삭제할 권한이 없습니다",
-  404: "댓글을 찾을 수 없습니다",
-};
+import type { ActionResult } from "@/types/action";
+import type { AdminComment, AdminCommentsPage } from "@/types/comment";
+import { fetchBackend, fetchBackendJson, toActionFailure } from "./client";
 
 /**
  * 백엔드 원본 응답
@@ -77,26 +65,22 @@ export async function getPostComments(
 /**
  * 댓글 삭제 (soft delete, 대댓글은 유지)
  * 이미 삭제된 댓글도 성공으로 처리됨 (백엔드 204)
- * production에서는 Server Action의 에러 메시지가 클라이언트에 전달되지 않으므로 실패 사유를 결과로 반환
+ * 클라이언트에서 호출하므로 실패 사유를 결과로 반환
  *
  * @param commentId - 삭제할 댓글 ID
  */
-export async function deleteComment(commentId: number): Promise<DeleteCommentResult> {
+export async function deleteComment(commentId: number): Promise<ActionResult> {
   // 공개 server action이라 런타임에는 숫자가 아닌 값이 들어올 수 있음
   if (!Number.isSafeInteger(commentId) || commentId < 1) {
-    return { error: DELETE_COMMENT_ERROR_MESSAGES[400] };
+    return toActionFailure(new BackendError(400));
   }
 
-  const response = await fetchBackend(`/admin/comments/${commentId}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    return {
-      error: DELETE_COMMENT_ERROR_MESSAGES[response.status] ?? "댓글 삭제에 실패했습니다",
-    };
+  try {
+    await fetchBackend(`/admin/comments/${commentId}`, { method: "DELETE" });
+  } catch (error) {
+    return toActionFailure(error);
   }
 
   refresh();
-  return {};
+  return { ok: true, data: undefined };
 }

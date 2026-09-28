@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import { isJwtExpired } from "./lib/auth/jwt-expiry";
 import type { GoogleVerifyResponse } from "./types/auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -52,6 +53,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           console.error("백엔드 인증 오류:", error);
           // 오류 발생 시에도 NextAuth 세션은 유지하되, backendToken이 없으면 API 호출 불가
         }
+      }
+
+      // 백엔드 JWT가 만료되면 세션을 끝낸다 (갱신 API가 없어 다시 로그인해야 함)
+      // null을 반환하면 세션이 없어져 각 페이지의 로그인 확인이 로그인 페이지로 보낸다
+      if (token.backendToken && isJwtExpired(token.backendToken)) {
+        return null;
       }
 
       return token;

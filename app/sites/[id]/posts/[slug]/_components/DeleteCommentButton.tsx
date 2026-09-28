@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Trash2, X } from "lucide-react";
 import { deleteComment } from "@/actions/comments";
 import { Button } from "@/app/_components/Button";
+import { LOGIN_EXPIRED_PATH } from "@/lib/constants/auth";
 
 interface DeleteCommentButtonProps {
   commentId: number;
@@ -20,6 +22,7 @@ export function DeleteCommentButton({
   authorName,
   hasReplies,
 }: DeleteCommentButtonProps) {
+  const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +37,15 @@ export function DeleteCommentButton({
     setError(null);
     try {
       const result = await deleteComment(commentId);
-      if (result.error) {
-        setError(result.error);
+      if (result.ok) {
+        setShowConfirm(false);
         return;
       }
-      setShowConfirm(false);
+      if (result.loginRequired) {
+        router.replace(LOGIN_EXPIRED_PATH);
+        return;
+      }
+      setError(result.error);
     } catch {
       setError("댓글 삭제에 실패했습니다");
     } finally {
