@@ -1,6 +1,14 @@
 import { signIn } from "@/auth";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ expired?: string | string[] }>;
+}) {
+  // 백엔드 인증이 만료되어 보내진 경우 (LOGIN_EXPIRED_PATH)
+  const { expired } = await searchParams;
+  const isExpired = expired === "1";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-10 shadow-lg dark:bg-zinc-900">
@@ -12,6 +20,15 @@ export default function LoginPage() {
             관리자 로그인
           </p>
         </div>
+
+        {isExpired && (
+          <p
+            role="status"
+            className="rounded-md bg-yellow-50 p-3 text-center text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+          >
+            로그인이 만료되었습니다. 다시 로그인해 주세요.
+          </p>
+        )}
 
         <form
           action={async () => {

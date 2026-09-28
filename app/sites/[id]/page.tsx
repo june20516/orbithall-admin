@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getSiteById, getSiteStats, getSitePosts } from "@/actions/sites";
+import { resolvePageErrorMessage } from "@/lib/backend/page-error";
 import Link from "next/link";
 import { Button } from "@/app/_components/Button";
 import { Edit } from "lucide-react";
@@ -33,26 +34,19 @@ export default async function SiteDetailPage({
     );
   }
 
-  // 사이트 정보 불러오기 (필수)
+  // 사이트 정보는 필수이므로 실패 시 에러 페이지 표시
   let site;
-  let siteError;
   try {
     site = await getSiteById(siteId);
   } catch (error) {
-    siteError = error;
-  }
-
-  // 사이트 정보는 필수이므로 실패 시 에러 페이지 표시
-  if (siteError || !site) {
+    const message = resolvePageErrorMessage(error);
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <div className="rounded-lg bg-red-50 p-6 dark:bg-red-900/20">
           <p className="text-sm font-semibold text-red-700 dark:text-red-400">
             사이트 정보를 불러오는데 실패했습니다
           </p>
-          <p className="mt-2 text-xs text-red-600 dark:text-red-500">
-            {siteError instanceof Error ? siteError.message : "알 수 없는 오류"}
-          </p>
+          <p className="mt-2 text-xs text-red-600 dark:text-red-500">{message}</p>
         </div>
       </div>
     );
