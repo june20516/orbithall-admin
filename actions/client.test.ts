@@ -1,13 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BackendError } from "@/lib/backend/errors";
-import { createUnsignedJwt, expiresInSeconds } from "@/tests/helpers/jwt";
+import type { BackendAccessToken } from "@/lib/auth/backend-token";
 import { fetchBackend, fetchBackendJson, toActionFailure } from "./client";
 
-const getBackendToken = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
+const getBackendAccessToken = vi.hoisted(() =>
+  vi.fn<() => Promise<BackendAccessToken | null>>()
+);
 
-vi.mock("@/lib/auth/backend-token", () => ({ getBackendToken }));
+vi.mock("@/lib/auth/backend-token", () => ({ getBackendAccessToken }));
 
-const validToken = createUnsignedJwt({ exp: expiresInSeconds(3600) });
+const validToken: BackendAccessToken = {
+  token: "access-token",
+  expiresAt: Date.now() + 60 * 60 * 1000,
+};
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -32,7 +37,7 @@ describe("fetchBackend", () => {
   beforeEach(() => {
     vi.stubEnv("API_URL", "http://backend.test");
     vi.stubGlobal("fetch", fetchMock);
-    getBackendToken.mockResolvedValue(validToken);
+    getBackendAccessToken.mockResolvedValue(validToken);
   });
 
   afterEach(() => {
@@ -42,7 +47,7 @@ describe("fetchBackend", () => {
   });
 
   it("토큰이 없으면 백엔드를 호출하지 않고 401 MISSING_TOKEN", async () => {
-    getBackendToken.mockResolvedValue(null);
+    getBackendAccessToken.mockResolvedValue(null);
 
     const error = await catchError(fetchBackend("/admin/sites"));
 
@@ -51,7 +56,10 @@ describe("fetchBackend", () => {
   });
 
   it("토큰이 만료됐으면 백엔드를 호출하지 않고 401 EXPIRED_TOKEN", async () => {
-    getBackendToken.mockResolvedValue(createUnsignedJwt({ exp: expiresInSeconds(-1) }));
+    getBackendAccessToken.mockResolvedValue({
+      token: "expired",
+      expiresAt: Date.now() - 1000,
+    });
 
     const error = await catchError(fetchBackend("/admin/sites"));
 
@@ -66,10 +74,10 @@ describe("fetchBackend", () => {
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("http://backend.test/admin/sites");
-    expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${validToken}`);
+    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer access-token");
   });
 
-  it("/api/* 형식 에러 본문({error:{code}})에서 코드를 읽는다", async () => {
+  it("에러 본문({error:{code}})에서 코드를 읽는다", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse(401, { error: { code: "INVALID_TOKEN", message: "invalid" } })
     );
@@ -77,16 +85,6 @@ describe("fetchBackend", () => {
     const error = await catchError(fetchBackend("/admin/sites"));
 
     expect(error).toEqual(new BackendError(401, "INVALID_TOKEN"));
-  });
-
-  it("/admin/* 형식 에러 본문({error:CODE})에서 코드를 읽는다", async () => {
-    fetchMock.mockResolvedValue(
-      jsonResponse(401, { error: "EXPIRED_TOKEN", message: "expired" })
-    );
-
-    const error = await catchError(fetchBackend("/admin/sites"));
-
-    expect(error).toEqual(new BackendError(401, "EXPIRED_TOKEN"));
   });
 
   it("본문이 JSON이 아니면 코드 없이 상태 코드만 담는다", async () => {

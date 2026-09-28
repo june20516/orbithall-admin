@@ -1,7 +1,6 @@
 import "server-only";
 
-import { getBackendToken } from "@/lib/auth/backend-token";
-import { isJwtExpired } from "@/lib/auth/jwt-expiry";
+import { getBackendAccessToken } from "@/lib/auth/backend-token";
 import {
   BackendError,
   getBackendErrorMessage,
@@ -30,16 +29,17 @@ function buildBackendUrl(endpoint: string): string {
  * 백엔드 API 호출 헬퍼
  * 성공(2xx)이 아니면 BackendError를 던진다
  * 토큰이 없거나 이미 만료됐으면 호출하지 않고 401 BackendError를 던진다
+ * (만료 임박 토큰의 갱신은 proxy가 요청 앞단에서 처리한다)
  */
 export async function fetchBackend(endpoint: string, options: RequestInit = {}) {
   const url = buildBackendUrl(endpoint);
-  const backendToken = await getBackendToken();
+  const accessToken = await getBackendAccessToken();
 
-  if (!backendToken) {
+  if (!accessToken) {
     throw new BackendError(401, "MISSING_TOKEN");
   }
 
-  if (isJwtExpired(backendToken)) {
+  if (Date.now() >= accessToken.expiresAt) {
     throw new BackendError(401, "EXPIRED_TOKEN");
   }
 
@@ -48,7 +48,7 @@ export async function fetchBackend(endpoint: string, options: RequestInit = {}) 
     ...options,
     headers: {
       ...options.headers,
-      Authorization: `Bearer ${backendToken}`,
+      Authorization: `Bearer ${accessToken.token}`,
       "Content-Type": "application/json",
     },
   });
@@ -92,9 +92,7 @@ export function toActionFailure(error: unknown): ActionResult<never> {
 }
 
 /**
- * 백엔드 에러 본문에서 에러 코드를 읽는다 (로그·디버깅용)
- * 백엔드는 {"error":{"code","message"}}로 통일할 예정이며,
- * 전환 전까지 /admin/*의 {"error":"CODE","message"}도 함께 읽는다
+ * 백엔드 에러 본문({"error":{"code","message"}})에서 에러 코드를 읽는다 (로그·디버깅용)
  * 본문이 JSON이 아니거나 코드가 없으면 undefined
  */
 async function readErrorCode(response: Response): Promise<string | undefined> {
@@ -105,9 +103,6 @@ async function readErrorCode(response: Response): Promise<string | undefined> {
     }
 
     const { error } = body;
-    if (typeof error === "string") {
-      return error;
-    }
     if (typeof error === "object" && error !== null && "code" in error) {
       return typeof error.code === "string" ? error.code : undefined;
     }
