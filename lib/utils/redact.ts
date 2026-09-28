@@ -13,6 +13,8 @@ const SECRET_KEYS = new Set([
   "id_token",
   "refresh_token",
   "backend_token",
+  "backend_access_token",
+  "backend_refresh_token",
   "password",
   "authorization",
 ]);
